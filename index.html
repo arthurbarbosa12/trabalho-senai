@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#141518">
+<title>Freio hidráulico — do pedal à roda · SENAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --y:#f2d43a;--y2:rgba(242,212,58,.18);
+  --g0:#0f1012;--g1:#141518;--g2:#1b1d21;--g3:#24272c;
+  --w:#f4f5f7;--w2:rgba(244,245,247,.62);--w3:rgba(244,245,247,.32);--w4:rgba(244,245,247,.12);
+  --gray:#c9ccd1;--ink:#121316;
+  --ease:cubic-bezier(.22,1,.36,1);--ease-io:cubic-bezier(.65,0,.35,1);
+  --font:"Archivo","Inter","Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#000;color:var(--w);font-family:var(--font);overflow:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+#app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
+#stage{position:relative;overflow:hidden;background:var(--g1);transition:background-color .9s ease}
+#stage.light{background:var(--gray)}
+
+/* ───── slides + transição "mergulho de câmera" ───── */
+.slide{position:absolute;inset:0;visibility:hidden;opacity:0;overflow:hidden}
+.slide.active{visibility:visible;opacity:1;z-index:2;animation:inF 1.1s var(--ease) both}
+.slide.leaving{visibility:visible;z-index:1;pointer-events:none;animation:outF .75s var(--ease-io) both}
+.slide.active.back{animation-name:inB}
+.slide.leaving.back{animation-name:outB}
+.slide.instant{animation:none!important}
+@keyframes inF{from{opacity:0;transform:scale(.9);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+@keyframes outF{to{opacity:0;transform:scale(1.18);filter:blur(12px)}}
+@keyframes inB{from{opacity:0;transform:scale(1.15);filter:blur(10px)}to{opacity:1;transform:none;filter:none}}
+@keyframes outB{to{opacity:0;transform:scale(.9);filter:blur(12px)}}
+
+/* entrada dos elementos */
+.rv{opacity:0}
+.slide.active .rv{animation:rv .9s var(--ease) both;animation-delay:calc(.3s + var(--d,0s))}
+@keyframes rv{from{opacity:0;transform:translateY(1.2em);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+
+.dark{background:var(--g1)}
+.dark .grid{position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(var(--w4) 1px,transparent 1px),linear-gradient(90deg,var(--w4) 1px,transparent 1px);
+  background-size:5em 5em;-webkit-mask:radial-gradient(ellipse 75% 70% at 55% 55%,#000 30%,transparent 85%);mask:radial-gradient(ellipse 75% 70% at 55% 55%,#000 30%,transparent 85%)}
+.full{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+/* tipografia */
+.kick{font-family:var(--mono);font-size:.82em;letter-spacing:.22em;text-transform:uppercase;color:var(--w2);display:flex;align-items:center;gap:.9em}
+.kick b{color:var(--y);font-weight:500}
+.kick i{display:block;width:2.4em;height:1px;background:currentColor;opacity:.5}
+.h{font-weight:700;text-transform:uppercase;letter-spacing:-.01em;line-height:.98;font-size:4.1em;margin-top:.35em}
+.p{font-size:1.55em;line-height:1.38;color:var(--w2);margin-top:.9em;max-width:20em}
+.p b{color:var(--w);font-weight:600}
+.txt{position:absolute;left:6em;top:6.2em;z-index:3;width:40em}
+.ylab{display:inline-flex;align-items:center;gap:.6em;font-weight:600;text-transform:uppercase;font-size:.95em;letter-spacing:.04em}
+.ylab::before{content:"";width:3px;height:1.2em;background:var(--y)}
+.hint{position:absolute;left:6em;bottom:4.4em;z-index:3;font-family:var(--mono);font-size:.78em;letter-spacing:.2em;text-transform:uppercase;color:var(--w3);display:flex;align-items:center;gap:.8em;transition:opacity .5s}
+.hint kbd{font-family:var(--mono);border:1px solid var(--w3);border-radius:.35em;padding:.2em .55em;color:var(--w2)}
+.hint.off{opacity:0}
+
+/* desenhos técnicos */
+svg .ln{fill:none;stroke:var(--w);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+svg .ln2{fill:none;stroke:var(--w3);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+svg .ln3{fill:none;stroke:var(--w4);stroke-width:1.2}
+svg .fl{fill:var(--g1)}
+svg .lbl{fill:var(--w);font-family:var(--font);font-weight:600;font-size:22px;letter-spacing:.06em;text-transform:uppercase}
+svg .lbl2{fill:var(--w2);font-family:var(--font);font-size:19px}
+svg .mono{fill:var(--w3);font-family:var(--mono);font-size:15px;letter-spacing:.18em}
+svg .act .ln,svg .act.ln{stroke:var(--y)}
+svg .act .fl{fill:rgba(242,212,58,.08)}
+svg .ln,svg .fl{transition:stroke .5s,fill .5s}
+svg .ybar{fill:var(--y)}
+
+/* ───── 1 · capa ───── */
+.s1{background:linear-gradient(180deg,#d4d7db 0%,#c6c9ce 62%,#b9bcc2 100%);color:var(--ink)}
+.s1 .vig{position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 55% 70%,rgba(255,255,255,.35),transparent 70%)}
+.s1-top{position:absolute;left:5.5em;top:4.6em;right:5.5em;z-index:1}
+.s1 .kick{color:rgba(18,19,22,.6)}
+.s1 .kick b{color:var(--ink)}
+.giant{font-weight:800;text-transform:uppercase;font-size:9.6em;line-height:.86;letter-spacing:-.035em;color:#16171a;margin-top:.12em;white-space:nowrap}
+.giant span{display:block}
+.s1-sub{position:absolute;right:5.5em;top:5.2em;text-align:right;font-family:var(--mono);font-size:.82em;letter-spacing:.22em;text-transform:uppercase;line-height:1.9;color:rgba(18,19,22,.65)}
+.s1-sub b{display:block;color:var(--ink);font-family:var(--font);font-size:2.1em;letter-spacing:-.01em;text-transform:none;font-weight:600;line-height:1.1;margin-bottom:.3em}
+.car{position:absolute;left:0;right:0;bottom:6.5%;width:100%;height:66%;z-index:2}
+.s1-q{position:absolute;left:5.5em;bottom:3.4em;z-index:3;display:flex;gap:1em;align-items:stretch;max-width:34em}
+.s1-q::before{content:"";flex:none;width:4px;background:var(--y);border-radius:2px}
+.s1-q p{font-size:1.6em;font-weight:600;line-height:1.25;color:var(--ink)}
+.s1-team{position:absolute;right:5.5em;bottom:3.6em;z-index:3;font-family:var(--mono);font-size:.78em;letter-spacing:.16em;text-transform:uppercase;color:rgba(18,19,22,.62);text-align:right;line-height:1.9}
+.s1-team b{color:var(--ink);font-weight:500}
+.car .body{fill:rgba(28,30,34,.13);stroke:#16171a;stroke-width:2.4;stroke-linejoin:round}
+.car .glass{fill:rgba(28,30,34,.1);stroke:#16171a;stroke-width:1.6}
+.car .det{fill:none;stroke:rgba(22,23,26,.5);stroke-width:1.4;stroke-linecap:round}
+.car .tire{fill:#18191c}
+.car .rim{fill:#2b2e33;stroke:#7b8088;stroke-width:2}
+.car .sys{fill:none;stroke:#16171a;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.car .sysf{fill:rgba(22,23,26,.22);stroke:#16171a;stroke-width:2.2}
+.car .lead{stroke:rgba(18,19,22,.55);stroke-width:1.3;fill:none}
+.car .mk{fill:var(--y);stroke:#16171a;stroke-width:2}
+.car .mkp{fill:none;stroke:#16171a;stroke-width:1.5;transform-box:fill-box;transform-origin:center;animation:mkp 2.2s ease-out infinite}
+@keyframes mkp{from{transform:scale(1);opacity:.7}to{transform:scale(3);opacity:0}}
+.car .clab{font-family:var(--font);font-weight:700;font-size:21px;letter-spacing:.06em;fill:#16171a;text-transform:uppercase}
+.car .shadow{fill:url(#shd)}
+.car .mkg{opacity:0}
+.slide.active .car .mkg{animation:fadeIn .7s var(--ease) both;animation-delay:var(--d)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.slide.active .car .drive{animation:drive 1.6s var(--ease) both .15s}
+@keyframes drive{from{transform:translateX(-9%);opacity:0}to{transform:none;opacity:1}}
+
+/* ───── locator ───── */
+.loc{position:absolute;right:5.5em;bottom:4.2em;z-index:3;width:15em;text-align:right}
+.loc svg{width:100%;display:block}
+.loc .body{fill:none;stroke:var(--w3);stroke-width:5}
+.loc .wh{fill:none;stroke:var(--w3);stroke-width:5}
+.loc .dot{fill:var(--y)}
+.loc .ring{fill:none;stroke:var(--y);stroke-width:3;transform-box:fill-box;transform-origin:center;animation:mkp 2s ease-out infinite}
+.loc span{display:block;font-family:var(--mono);font-size:.7em;letter-spacing:.2em;text-transform:uppercase;color:var(--w3);margin-top:.6em}
+.loc span b{color:var(--y);font-weight:500}
+
+/* ───── 2 · pedal ───── */
+.boostcap{opacity:.35;transition:opacity .6s .4s}
+.on .boostcap{opacity:1}
+.diaph{transition:transform 1.1s var(--ease);transform-box:fill-box;transform-origin:center}
+.on .diaph{transform:translateX(12px)}
+.mcpist{transition:transform 1.1s var(--ease)}
+.on .mcpist{transform:translateX(22px)}
+.farrow{opacity:0;transition:opacity .4s,transform .9s var(--ease);transform:translate(-30px,0)}
+.on .farrow{opacity:1;transform:translate(0,0)}
+
+/* ───── 4 · roda ───── */
+.brake-btn{position:absolute;left:6em;bottom:7.2em;z-index:4;display:flex;align-items:center;gap:1.2em;padding:1em 1.6em 1em 1em;border-radius:999px;border:1.5px solid var(--w3);background:rgba(20,21,24,.7);touch-action:none;-webkit-touch-callout:none;transition:border-color .3s,background .3s,transform .2s}
+.brake-btn .kn{width:3.6em;height:3.6em;border-radius:50%;border:2px solid var(--w2);display:grid;place-items:center;transition:all .3s}
+.brake-btn .kn i{width:1.2em;height:1.2em;border-radius:50%;background:var(--w)}
+.brake-btn b{display:block;font-size:1.7em;font-weight:700;letter-spacing:.04em;text-transform:uppercase;text-align:left}
+.brake-btn small{display:block;font-family:var(--mono);font-size:.72em;letter-spacing:.16em;text-transform:uppercase;color:var(--w3);text-align:left;margin-top:.2em}
+.brake-btn.on{border-color:var(--y);background:rgba(242,212,58,.12);transform:scale(.97)}
+.brake-btn.on .kn{border-color:var(--y);background:var(--y)}
+.brake-btn.on .kn i{background:var(--ink)}
+.rpm{position:absolute;left:6em;bottom:15.2em;z-index:4;font-family:var(--mono);font-size:.78em;letter-spacing:.2em;text-transform:uppercase;color:var(--w3)}
+.rpm b{display:block;font-family:var(--font);font-size:3.4em;letter-spacing:-.02em;color:var(--w);font-weight:700;line-height:1;margin-top:.2em}
+.rpm .bar{width:16em;height:3px;background:var(--w4);margin-top:.8em;border-radius:2px;overflow:hidden}
+.rpm .bar i{display:block;height:100%;background:var(--w);transition:background .3s}
+
+/* ───── 5 · maquete ───── */
+.map{position:absolute;left:6em;right:6em;top:16.5em;bottom:6.5em;display:grid;grid-template-columns:1.05fr 1fr;grid-template-rows:1fr auto;gap:1.6em 3em}
+.map .draw{position:relative;border:1px solid var(--w4);border-radius:1em;background:rgba(255,255,255,.015)}
+.map .draw svg{position:absolute;inset:0;width:100%;height:100%}
+.pairs{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:1em}
+.pair{border-top:2px solid var(--w4);padding-top:.8em;opacity:.35;transition:opacity .5s,border-color .5s}
+.pair.seen{opacity:.75}
+.pair.cur{opacity:1;border-color:var(--y)}
+.pair .n{font-family:var(--mono);font-size:.72em;letter-spacing:.2em;color:var(--w3)}
+.pair.cur .n{color:var(--y)}
+.pair .a{font-size:1.15em;font-weight:600;margin-top:.35em;line-height:1.25}
+.pair .eq{font-family:var(--mono);font-size:.7em;letter-spacing:.18em;text-transform:uppercase;color:var(--w3);margin:.45em 0 .25em}
+.pair .b{font-size:1.15em;color:var(--w2);line-height:1.25}
+.pair.cur .b{color:var(--y)}
+.badge{opacity:0;transition:opacity .4s}
+.badge.show{opacity:1}
+.badge circle{fill:var(--y)}
+.badge text{fill:var(--ink);font-family:var(--font);font-weight:700;font-size:20px}
+.dim{opacity:.4;transition:opacity .5s}
+.dim.act{opacity:1}
+
+/* fotos */
+.photo{position:relative;width:100%;height:100%;border-radius:1em;overflow:hidden;background:var(--g2);border:1px solid var(--w4)}
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo .ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7em;text-align:center;padding:1em;border:2px dashed var(--w4);border-radius:1em}
+.photo .ph svg{width:3em;height:3em;stroke:var(--w3)}
+.photo .ph b{font-size:1.15em;font-weight:600;color:var(--w2)}
+.photo .ph code{font-family:var(--mono);font-size:.72em;color:var(--w3)}
+.photo.drag{box-shadow:0 0 0 3px var(--y)}
+.photo .tag{position:absolute;left:1em;top:1em;font-family:var(--mono);font-size:.7em;letter-spacing:.2em;text-transform:uppercase;background:rgba(15,16,18,.75);padding:.5em .8em;border-radius:.4em;color:var(--w2)}
+
+/* ───── 6 · montagem ───── */
+.build{position:absolute;left:6em;right:6em;top:15.5em;bottom:6.5em;display:grid;grid-template-columns:1.55fr 1fr;gap:3em}
+.frames{position:relative}
+.frames .photo{position:absolute;inset:0;opacity:0;transform:scale(1.03);transition:opacity .7s var(--ease),transform 1.2s var(--ease)}
+.frames .photo.cur{opacity:1;transform:none}
+.cap{display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:.5em}
+.cap .cnt{font-family:var(--mono);font-size:.8em;letter-spacing:.2em;color:var(--w3)}
+.cap .cnt b{color:var(--y);font-weight:500}
+.cap .ct{position:relative;margin-top:1em;min-height:8.5em}
+.cap .ct p{position:absolute;left:0;bottom:0;font-size:2.1em;font-weight:600;line-height:1.22;opacity:0;transform:translateY(.6em);transition:opacity .6s,transform .8s var(--ease)}
+.cap .ct p.cur{opacity:1;transform:none}
+.thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:.6em;margin-top:2em}
+.thumbs i{height:3px;background:var(--w4);border-radius:2px;transition:background .4s}
+.thumbs i.done{background:var(--w2)}
+.thumbs i.cur{background:var(--y)}
+.final{position:absolute;inset:0;z-index:5;opacity:0;visibility:hidden;transition:opacity 1s var(--ease),visibility 1s}
+.final.show{opacity:1;visibility:visible}
+.final .photo{border-radius:0;border:0;height:100%}
+.final .photo .ph{border-radius:0}
+.final .shade{position:absolute;inset:0;background:linear-gradient(0deg,rgba(10,11,13,.92) 0%,rgba(10,11,13,.35) 45%,rgba(10,11,13,.1) 70%);pointer-events:none}
+.final .live{position:absolute;left:6em;bottom:6em;pointer-events:none}
+.final .live .kick{color:var(--y)}
+.final .live h2{font-weight:800;text-transform:uppercase;font-size:7.2em;line-height:.88;letter-spacing:-.03em;margin-top:.15em}
+.final .dotlive{display:inline-block;width:.7em;height:.7em;border-radius:50%;background:#ff3b3b;box-shadow:0 0 0 0 rgba(255,59,59,.6);animation:live 1.6s infinite}
+@keyframes live{to{box-shadow:0 0 0 1em rgba(255,59,59,0)}}
+
+/* ───── controles ───── */
+.ui{position:absolute;right:0;bottom:0;z-index:20;display:flex;align-items:center;gap:.55em;padding:1.1em 1.3em;transition:opacity .4s,transform .4s}
+.ui.idle{opacity:0;transform:translateY(8px);pointer-events:none}
+.cb{width:2.8em;height:2.8em;border-radius:50%;display:grid;place-items:center;background:rgba(20,21,24,.72);border:1px solid rgba(255,255,255,.14);color:#fff;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:all .25s}
+.cb:hover{border-color:rgba(255,255,255,.5)}
+.cb:disabled{opacity:.3;cursor:default}
+.cb.pri{background:var(--y);color:var(--ink);border-color:var(--y)}
+.cb svg{width:1.25em;height:1.25em}
+.cnt2{display:flex;flex-direction:column;align-items:center;gap:.35em;min-width:4.6em;padding:.45em .7em;border-radius:1.5em;background:rgba(20,21,24,.72);border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.cnt2 .num{font-family:var(--mono);font-size:.85em;color:#fff;letter-spacing:.06em}
+.cnt2 .num span{color:rgba(255,255,255,.45)}
+.dots{display:flex;gap:.3em;height:.35em}
+.dots i{width:.35em;height:.35em;border-radius:50%;background:rgba(255,255,255,.25)}
+.dots i.on{background:var(--y)}
+.prog{position:absolute;left:0;top:0;height:3px;background:var(--y);z-index:20;transition:width .8s var(--ease)}
+
+.menu{position:absolute;inset:0;z-index:30;background:rgba(12,13,15,.92);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);padding:5em 6em;opacity:0;visibility:hidden;transition:.35s}
+.menu.open{opacity:1;visibility:visible}
+.menu h3{font-size:2.6em;font-weight:700;text-transform:uppercase;margin:.3em 0 1.2em}
+.menu .mg{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2em}
+.menu button{text-align:left;padding:1.4em;border-radius:1em;border:1px solid var(--w4);background:rgba(255,255,255,.02);transition:border-color .3s}
+.menu button:hover{border-color:var(--w3)}
+.menu button.cur{border-color:var(--y)}
+.menu button span{font-family:var(--mono);font-size:.8em;letter-spacing:.2em;color:var(--w3)}
+.menu button b{display:block;font-size:1.5em;font-weight:700;text-transform:uppercase;margin-top:.4em}
+.menu .x{position:absolute;right:5em;top:4.6em}
+.menu .tip{margin-top:2.2em;font-family:var(--mono);font-size:.78em;letter-spacing:.12em;color:var(--w3)}
+
+.rotate{display:none;position:fixed;left:0;right:0;bottom:1.2em;text-align:center;font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);z-index:50;pointer-events:none}
+@media (orientation:portrait) and (max-width:899px){.rotate{display:block}}
+.loc.top{top:3.4em;bottom:auto}
+.pair .a,.pair .b{font-size:1.3em}
+.pair .eq{font-size:.75em}
+.rpm{bottom:17.8em}
+
+/* ───── desenho da maquete ───── */
+.draw{position:relative;border:1px solid var(--w4);border-radius:1em;background:rgba(255,255,255,.015);overflow:hidden}
+.draw>svg{position:absolute;inset:0;width:100%;height:100%}
+.draw.drag,.final.drag{box-shadow:inset 0 0 0 3px var(--y)}
+.frames.draw{position:relative}
+.mg{transition:opacity .9s var(--ease)}
+.mg.hid{opacity:0}
+svg .hose-o{fill:none;stroke:var(--w);stroke-width:14;stroke-linecap:round;transition:stroke .5s}
+svg .hose-i{fill:none;stroke:var(--g1);stroke-width:10;stroke-linecap:round}
+svg .water{fill:none;stroke:var(--y);stroke-width:5;stroke-linecap:round;opacity:0;transition:opacity .6s}
+svg .act .hose-o{stroke:var(--y)}
+svg.wet .water{opacity:.9}
+svg .drop{fill:var(--w2);transition:fill .5s}
+svg .act .drop{fill:var(--y)}
+svg .spin{fill:none;stroke:var(--y);stroke-width:4;stroke-linecap:round;stroke-dasharray:34 626;opacity:0;transition:opacity .5s}
+svg.spinning .spin{opacity:1;animation:cdspin 1.1s linear infinite}
+@keyframes cdspin{to{stroke-dashoffset:-660}}
+.photo.ovl{position:absolute;inset:0;border:0;border-radius:0;background:none;pointer-events:none;opacity:0;transition:opacity .7s var(--ease)}
+.photo.ovl.has{background:var(--g2)}
+.frames .photo.ovl.has.cur,.map .photo.ovl.has,.final .photo.ovl.has{opacity:1}
+.addph{position:absolute;right:1em;top:1em;z-index:3;font-family:var(--mono);font-size:.68em;letter-spacing:.16em;text-transform:uppercase;color:var(--w3);border:1px solid var(--w4);border-radius:999px;padding:.5em .9em;background:rgba(20,21,24,.75);transition:color .3s,border-color .3s}
+.addph:hover{color:var(--w);border-color:var(--w3)}
+.final{background:var(--g1)}
+.fdraw{position:absolute;right:3em;top:4em;bottom:3em;width:62%}
+.fdraw svg{width:100%;height:100%}
+.final .shade{background:linear-gradient(90deg,rgba(15,16,18,.85) 0%,rgba(15,16,18,.2) 45%,transparent 70%)}
+.final .photo.ovl.has~.shade{background:linear-gradient(0deg,rgba(10,11,13,.92) 0%,rgba(10,11,13,.35) 45%,rgba(10,11,13,.1) 70%)}
+.final .addph{right:6em;top:3em}
+.fdraw{right:4em;top:3em;bottom:22em;width:70%}
+.pairs{grid-template-columns:repeat(6,1fr)}
+.pair .a,.pair .b{font-size:1.18em}
+svg .lead2{fill:none;stroke:var(--y);stroke-width:1.5}
+.ptag{opacity:0;transition:opacity .6s .4s}
+.ptag.show,#padTagF{opacity:1}
+svg .push{transition:transform .6s var(--ease)}
+svg.wet .push{transform:translateX(-5px)}
+.fdraw{bottom:20em}
+
+
+/* ═════════ MODO JOGO ═════════ */
+.pedals{position:absolute;left:6em;bottom:3em;z-index:15;display:none;align-items:flex-end;gap:1.1em}
+.pedals.show{display:flex}
+.pedals.brake-only .gas{display:none}
+#stage[data-s="0"] .pedals{left:50%;transform:translateX(-50%);bottom:2.4em}
+#stage[data-s="5"] .pedals{bottom:auto;top:3.6em;left:auto;right:6em}
+.pdl{position:relative;display:flex;flex-direction:column;align-items:center;gap:.45em;touch-action:none;-webkit-touch-callout:none}
+.pdl .pd{display:block;border-radius:.7em .7em 1em 1em;border:2px solid var(--w3);background:repeating-linear-gradient(0deg,rgba(255,255,255,.12) 0 3px,transparent 3px 9px),linear-gradient(180deg,#2b2e34,#16181b);
+  box-shadow:0 .5em 1em rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.15);transform:perspective(20em) rotateX(18deg);transform-origin:50% 100%;transition:transform .12s,border-color .2s,box-shadow .2s}
+.pdl.gas .pd{width:3.4em;height:6.4em}
+.pdl.brk .pd{width:6.6em;height:4.8em}
+.pdl b{font-size:.95em;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--w)}
+.pdl small{font-family:var(--mono);font-size:.62em;letter-spacing:.15em;color:var(--w3);margin-top:-.3em}
+.pdl.on .pd{transform:perspective(20em) rotateX(42deg) translateY(.25em);border-color:var(--y);box-shadow:0 .2em .5em rgba(0,0,0,.5),0 0 1.4em rgba(242,212,58,.35)}
+.pdl.brk.on .pd{border-color:#ff4a3d;box-shadow:0 .2em .5em rgba(0,0,0,.5),0 0 1.4em rgba(255,74,61,.45)}
+.light .pdl b{color:var(--ink)} .light .pdl small{color:rgba(18,19,22,.55)}
+.light .pdl .pd{border-color:rgba(18,19,22,.45)}
+
+.hint{left:19em;bottom:4.8em}
+.hud1{position:absolute;right:5.5em;top:13.5em;z-index:3;text-align:right;color:var(--ink);font-family:var(--mono);font-size:.78em;letter-spacing:.18em;text-transform:uppercase}
+.hud1 b{display:block;font-family:var(--font);font-size:3.6em;letter-spacing:-.02em;font-weight:800;line-height:1;margin:.15em 0 .5em}
+.hud1 b i{font-style:normal}
+.hud1 .pbar{width:16em;height:4px;background:rgba(18,19,22,.15);margin:0 0 .5em auto;border-radius:2px;overflow:hidden}
+.hud1 .pbar i{display:block;height:100%;width:0;background:#e0321f}
+.car .sys,.car .sysf{transition:stroke .2s,fill .2s}
+.car .hot .sys{stroke:#d1a400;stroke-width:4.5}
+.car .hot .sysf{stroke:#d1a400;fill:rgba(242,212,58,.55)}
+.car .mkg.hot .mk{fill:#ff4a3d}
+.car .mkg.hot .clab{fill:#b8860b}
+.rpm b i,.gauge3 b i,.ghud b i{font-style:normal}
+.gauge3{position:absolute;right:6em;top:22em;z-index:3;text-align:right;font-family:var(--mono);font-size:.78em;letter-spacing:.2em;text-transform:uppercase;color:var(--w3)}
+.gauge3 b{display:block;font-family:var(--font);font-size:3.4em;font-weight:800;color:var(--y);letter-spacing:-.02em;margin-top:.15em}
+.rpm{bottom:13em}
+.rpm b{font-size:3em}
+
+/* desafio */
+#sG .txt{top:5em}
+.ghud{position:absolute;right:6em;top:5.4em;z-index:3;display:flex;gap:2.6em}
+.ghud span{display:block;font-family:var(--mono);font-size:.75em;letter-spacing:.2em;text-transform:uppercase;color:var(--w3)}
+.ghud b{display:flex;align-items:baseline;gap:.3em;font-size:3.4em;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.ghud b small{font-size:.32em;font-weight:500;color:var(--w2);letter-spacing:.1em}
+.ghud div:last-child b{font-size:2.2em;color:var(--y);padding-top:.35em}
+.gsys{position:absolute;left:50%;bottom:3.4em;transform:translateX(-30%);z-index:3}
+.gsys span{display:block;font-family:var(--mono);font-size:.72em;letter-spacing:.2em;text-transform:uppercase;color:var(--w3);margin-bottom:.6em}
+.gsys div{display:flex;gap:.4em}
+.gsys i{font-style:normal;font-size:.95em;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:.5em .9em;border-radius:999px;border:1px solid var(--w4);color:var(--w3);transition:all .15s}
+.gsys i.on{border-color:var(--y);color:var(--ink);background:var(--y)}
+.gmsg{position:absolute;left:50%;top:16.5em;transform:translateX(-50%);z-index:4;text-align:center;pointer-events:none}
+.gmsg b{display:block;font-size:3em;font-weight:800;text-transform:uppercase;letter-spacing:-.01em}
+.gmsg span{display:block;font-size:1.2em;color:var(--w2);margin-top:.3em}
+.gmsg button{pointer-events:auto;display:none;margin:1em auto 0;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:.8em 1.6em;border-radius:999px;background:var(--y);color:var(--ink)}
+.gmsg.again button{display:block}
+.gmsg.good b{color:var(--y);animation:pop .6s var(--ease)}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+#sG .gk text.mono{fill:var(--w3)}
+/* ajustes de posição */
+.s1-q{bottom:auto;top:24.6em}
+#stage[data-s="0"] .pedals{left:5.5em;transform:none;bottom:2.2em}
+.gauge3{right:auto;left:6em;top:25em;text-align:left}
+.gsys{left:auto;right:6em;bottom:auto;top:11.4em;transform:none;text-align:right}
+.gsys div{justify-content:flex-end}
+.gauge3{top:auto;bottom:12em}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function () {
+  'use strict'
+  var $ = function (id) { return document.getElementById(id) }
+  var NS = 'http://www.w3.org/2000/svg'
+
+  /* ═════════ CONTEÚDO ═════════ */
+  var TEAM = ['Arthur', 'Ana Luísa', 'Davi', 'Débora', 'Isabela']
+  var TITLES = ['Do pedal à roda', 'O pé inicia a frenagem', 'A pressão chega à roda', 'As pastilhas apertam o disco', 'Desafio: pare na faixa', 'Do carro para a nossa maquete', 'Como montamos']
+  var BUILD = [
+    ['montagem-1', 'Testamos o motor que o professor forneceu.'],
+    ['montagem-2', 'O CD escapava do eixo. Fixamos o disco com uma porca e cola.'],
+    ['montagem-3', 'Recortamos o papelão no formato da maquete.'],
+    ['montagem-4', 'Ligamos as seringas pela mangueira com água e testamos a frenagem.']
+  ]
+  var PAIRS = [
+    ['A seringa que apertamos', 'Cilindro-mestre'],
+    ['A mangueira com água', 'Linha hidráulica'],
+    ['O “C” de papelão com as duas seringas', 'Pinça: um lado empurra, o outro apoia'],
+    ['A pastilha curva de papelão', 'Pastilha de freio'],
+    ['O CD', 'Disco de freio'],
+    ['O motor', 'Faz o CD girar, como a roda']
+  ]
+
+  /* ═════════ ÍCONES ═════════ */
+  function ic(d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>' }
+  var IC = {
+    l: ic('<path d="M15 5l-7 7 7 7"/>'), r: ic('<path d="M9 5l7 7-7 7"/>'),
+    grid: ic('<rect x="4" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.2"/>'),
+    fs: ic('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'), fs2: ic('<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'),
+    x: ic('<path d="M6 6l12 12M18 6L6 18"/>'),
+    snd: ic('<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>'),
+    mute: ic('<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/>'),
+    img: '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="15" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="M3 17l4.5-4.5 3.5 3.5 2.5-2.5 4.5 4.5"/><path d="M20 3v6M17 6h6"/></svg>'
+  }
+  function kick(n, t) { return '<div class="kick"><b>' + (n < 10 ? '0' : '') + n + '</b><i></i>' + t + '</div>' }
+
+  /* ═════════ CARRO (perfil) ═════════ */
+  var CAR = 'M175 450C162 420 166 380 188 358C222 322 300 305 382 290C470 270 560 210 690 190C790 176 880 184 960 220C1010 242 1052 272 1102 288C1200 308 1330 318 1402 348C1442 368 1452 402 1442 428L1434 458L1302 462A114 114 0 1 0 1078 462L514 462A114 114 0 1 0 286 462Z'
+  function wheel(cx, cy, front, id) {
+    var s = '<circle class="tire" cx="' + cx + '" cy="' + cy + '" r="88"/><circle class="rim" cx="' + cx + '" cy="' + cy + '" r="62"/>'
+    s += '<circle cx="' + cx + '" cy="' + cy + '" r="48" fill="none" stroke="#9aa0a8" stroke-width="2"/>'
+    s += '<g class="spk" data-cx="' + cx + '" data-cy="' + cy + '"' + (id ? ' id="' + id + '"' : '') + '>'
+    for (var i = 0; i < 5; i++) {
+      var a = i / 5 * Math.PI * 2 - Math.PI / 2
+      s += '<line x1="' + (cx + Math.cos(a) * 14) + '" y1="' + (cy + Math.sin(a) * 14) + '" x2="' + (cx + Math.cos(a) * 60) + '" y2="' + (cy + Math.sin(a) * 60) + '" stroke="#5f646c" stroke-width="7" stroke-linecap="round"/>'
+    }
+    s += '</g>'
+    // pinça
+    var a0 = front ? -150 : -80, a1 = front ? -100 : -30, r0 = 44, r1 = 62
+    function P(r, a) { a = a * Math.PI / 180; return (cx + Math.cos(a) * r).toFixed(1) + ' ' + (cy + Math.sin(a) * r).toFixed(1) }
+    s += '<path d="M' + P(r1, a0) + ' A' + r1 + ' ' + r1 + ' 0 0 1 ' + P(r1, a1) + ' L' + P(r0, a1) + ' A' + r0 + ' ' + r0 + ' 0 0 0 ' + P(r0, a0) + 'Z" fill="#6b7078" stroke="#16171a" stroke-width="2"' + (front && id ? ' id="' + id + 'cal"' : '') + '/>'
+    s += '<circle cx="' + cx + '" cy="' + cy + '" r="12" fill="#9aa0a8"/>'
+    return s
+  }
+  function marker(x, y, lx, ly, text, anchor, d) {
+    var tx = anchor === 'end' ? lx - 12 : lx + 12
+    return '<g class="mkg" style="--d:' + d + 's"><path class="lead" d="M' + x + ' ' + y + 'L' + lx + ' ' + ly + '"/>' +
+      '<rect x="' + (anchor === 'end' ? lx - 6 : lx + 2) + '" y="' + (ly - 13) + '" width="4" height="26" fill="#f2d43a"/>' +
+      '<text class="clab" x="' + tx + '" y="' + (ly + 8) + '" text-anchor="' + (anchor || 'start') + '">' + text + '</text>' +
+      '<circle class="mkp" cx="' + x + '" cy="' + y + '" r="8"/><circle class="mk" cx="' + x + '" cy="' + y + '" r="8"/></g>'
+  }
+  var carSVG = '<svg class="car" viewBox="0 0 1600 620" preserveAspectRatio="xMidYMax meet"><defs><radialGradient id="bl" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff2a2a" stop-opacity=".95"/><stop offset="1" stop-color="#ff2a2a" stop-opacity="0"/></radialGradient><radialGradient id="shd" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#000" stop-opacity=".35"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>' +
+    '<g id="road1"></g><g id="speed1"></g>' +
+    '<g class="drive"><ellipse class="shadow" cx="810" cy="532" rx="720" ry="26"/>' +
+    wheel(400, 440, false, 'w1r') + wheel(1190, 440, true, 'w1f') +
+    '<path class="body" d="' + CAR + '"/>' +
+    '<path class="glass" d="M566 288C628 236 700 210 784 205C862 202 922 214 962 240L988 278C900 282 700 288 566 288Z"/>' +
+    '<path class="det" d="M830 206L842 284M640 300C760 296 900 294 1012 296M1040 308L1046 450M640 300C628 360 630 420 640 452M520 452L1070 452M1360 338C1395 342 1420 352 1432 366M190 352L262 326M1250 400L1340 396M300 350C380 330 470 320 560 318"/>' +
+    // sistema de freio visto "através" da carroceria
+    '<path class="sys" d="M1135 330C1080 380 900 470 700 474L470 474C432 474 414 452 418 394" stroke-opacity=".35" stroke-dasharray="6 7"/>' +
+    '<ellipse id="blight" cx="200" cy="344" rx="46" ry="22" fill="url(#bl)" opacity="0"/>' +
+    '<g id="sys1"><path class="sys" d="M1045 320L1010 418"/><rect class="sysf" x="988" y="414" width="44" height="12" rx="4" transform="rotate(-18 1010 420)"/></g>' + '<circle class="sysf" cx="1045" cy="320" r="6"/>' +
+    '<path class="sys" d="M1030 360L1080 330"/>' +
+    '<g id="sys2"><circle class="sysf" cx="1105" cy="320" r="26"/><rect class="sysf" x="1131" y="311" width="59" height="18" rx="3"/><rect class="sysf" x="1140" y="295" width="36" height="16" rx="3"/></g>' +
+    '<g id="sys3"><path class="sys" d="M1190 320C1230 320 1234 360 1198 378L1172 390"/></g>' +
+    marker(1010, 420, 940, 575, 'Pedal', 'end', 1.1) +
+    marker(1160, 320, 1210, 190, 'Cilindro-mestre', 'start', 1.3) +
+    marker(1222, 352, 1330, 262, 'Tubulação', 'start', 1.5) +
+    marker(1157, 392, 1240, 575, 'Pinça', 'start', 1.7) +
+    '</g></svg>'
+
+  function locator(x, y, label) {
+    return '<div class="loc rv" style="--d:.6s"><svg viewBox="150 170 1320 320"><path class="body" d="' + CAR + '"/><circle class="wh" cx="400" cy="440" r="88"/><circle class="wh" cx="1190" cy="440" r="88"/>' +
+      '<circle class="ring" cx="' + x + '" cy="' + y + '" r="16"/><circle class="dot" cx="' + x + '" cy="' + y + '" r="16"/></svg><span>Você está aqui · <b>' + label + '</b></span></div>'
+  }
+
+
+  /* ═════════ DESENHO DA MAQUETE (linhas brancas) ═════════ */
+  function maq(p) {
+    var corr = 'M48 439'; for (var x = 48; x < 852; x += 16) corr += 'q4 -7 8 0t8 0'
+    function P(r, a) { a = a * Math.PI / 180; return (430 + Math.cos(a) * r).toFixed(1) + ' ' + (245 + Math.sin(a) * r).toFixed(1) }
+    var pad = 'M' + P(130, 35) + 'A130 130 0 0 1 ' + P(130, 145) + 'L' + P(108, 145) + 'A108 108 0 0 0 ' + P(108, 35) + 'Z'
+    var hoseA = 'M832 367C880 367 885 200 772 200', hoseB = 'M752 290C800 290 838 300 862 306'
+    return '<path class="ln3" d="M20 462H880"/>' +
+      // papelão: base, suporte do motor, apoio da pastilha, bloco da seringa
+      '<g class="mg" id="' + p + 'base"><rect class="ln fl" x="40" y="420" width="820" height="38" rx="4"/><path class="ln2" d="' + corr + '"/>' +
+      '<rect class="ln fl" x="230" y="275" width="90" height="145" rx="3"/><rect class="ln fl" x="340" y="372" width="220" height="48" rx="3"/><rect class="ln fl" x="652" y="384" width="158" height="36" rx="3"/>' +
+      '<path class="ln2" d="M222 267H328V420M332 364H568M644 376H818V420" stroke-dasharray="5 7"/></g>' +
+      // motor + bateria
+      '<g class="mg" id="' + p + 'motor"><rect class="ln fl" x="240" y="215" width="160" height="60" rx="9"/><ellipse class="ln fl" cx="240" cy="245" rx="9" ry="30"/><path class="ln2" d="M285 215V275M330 215V275"/>' +
+      '<rect class="ln fl" x="284" y="203" width="12" height="12" rx="2"/><rect class="ln fl" x="314" y="203" width="12" height="12" rx="2"/><path class="ln" d="M400 245H430" style="stroke-width:5"/>' +
+      '<rect class="ln fl" x="60" y="340" width="110" height="80" rx="7"/><rect class="ln fl" x="78" y="330" width="14" height="10" rx="2"/><rect class="ln fl" x="138" y="330" width="14" height="10" rx="2"/>' +
+      '<path class="ln2" d="M78 370h14M85 363v14M138 370h14"/><path class="ln2" d="M85 330C90 270 200 190 290 203M145 330C160 280 260 186 320 203"/></g>' +
+      // estrutura em C (pinça de papelão)
+      '<g class="mg" id="' + p + 'cal"><rect class="ln fl" x="560" y="95" width="45" height="277" rx="3"/>' +
+      '<path class="ln fl" d="M560 100L470 100C380 100 318 132 298 194L326 202C346 152 396 128 470 128L560 128Z"/></g>' +
+      // CD
+      '<g class="mg" id="' + p + 'cd"><circle class="ln fl" cx="430" cy="245" r="105"/><circle class="ln2" cx="430" cy="245" r="74"/><circle class="ln2" cx="430" cy="245" r="42" stroke-dasharray="3 6"/>' +
+      '<circle class="ln" cx="430" cy="245" r="11"/>' +
+      '<path class="spin" d="M430 140A105 105 0 1 1 430 350A105 105 0 1 1 430 140"/>' +
+      '<polygon class="ln fl" points="418,238 430,231 442,238 442,252 430,259 418,252"/>' +
+      '<circle class="drop" cx="414" cy="266" r="3.5"/><circle class="drop" cx="426" cy="271" r="3"/><circle class="drop" cx="447" cy="226" r="3"/></g>' +
+      // pastilha curva embaixo do disco
+      '<g class="mg" id="' + p + 'pad"><path class="ln fl padf" d="' + pad + '"/><path class="ln2" d="M' + P(119, 50) + 'A119 119 0 0 1 ' + P(119, 130) + '" stroke-dasharray="4 6"/></g>' +
+      // seringa de cima (empurra) e de baixo (apoio)
+      '<g class="mg" id="' + p + 'sb"><rect class="ln fl" x="594" y="182" width="6" height="36" rx="1"/><rect class="ln fl" x="600" y="186" width="160" height="28" rx="4"/><rect class="ln fl" x="760" y="195" width="12" height="10" rx="2"/>' +
+      '<path class="ln2" d="M630 186v7M650 186v7M670 186v7M690 186v7"/><g class="push"><path class="ln" d="M538 200H594" style="stroke-width:7"/><rect class="ln fl" x="530" y="188" width="8" height="24" rx="2"/></g></g>' +
+      '<g class="mg" id="' + p + 'sa"><rect class="ln fl" x="594" y="274" width="6" height="32" rx="1"/><rect class="ln fl" x="600" y="278" width="140" height="24" rx="4"/><rect class="ln fl" x="740" y="285" width="12" height="10" rx="2"/>' +
+      '<path class="ln" d="M538 290H594" style="stroke-width:7"/><rect class="ln fl" x="530" y="280" width="8" height="20" rx="2"/></g>' +
+      // seringa que apertamos
+      '<g class="mg" id="' + p + 'sin"><g class="inp"><rect class="ln fl" x="640" y="345" width="8" height="44" rx="2"/><path class="ln" d="M648 367H680" style="stroke-width:7"/></g>' +
+      '<rect class="ln fl" x="680" y="350" width="6" height="34" rx="1"/><rect class="ln fl" x="686" y="353" width="134" height="28" rx="4"/><rect class="ln fl" x="820" y="362" width="12" height="10" rx="2"/>' +
+      '<path class="ln2" d="M710 353v7M730 353v7M750 353v7M770 353v7"/><path class="ln" d="M608 367H632M621 359L633 367L621 375"/></g>' +
+      // mangueiras
+      '<g class="mg" id="' + p + 'hose">' + [hoseA, hoseB].map(function (d) { return '<path class="hose-o" d="' + d + '"/><path class="hose-i" d="' + d + '"/><path class="water" d="' + d + '"/>' }).join('') + '</g>'
+  }
+  function maqSVG(p, extra) { return '<svg viewBox="0 0 900 500" preserveAspectRatio="xMidYMid meet">' + maq(p) + (extra || '') + '</svg>' }
+  function addBtn(key) { return '<button class="addph" data-add="' + key + '">+ foto real</button>' }
+
+  /* ═════════ SLIDES ═════════ */
+  var S = []
+
+  // 1 · capa
+  S.push('<section class="slide s1"><div class="vig"></div>' +
+    '<div class="s1-top">' + '<div class="rv" style="--d:0s"><div class="kick"><b>SENAI</b><i></i>Mecânica Automotiva</div></div>' +
+    '<h1 class="giant rv" style="--d:.1s"><span>Freio</span><span>Hidráulico</span></h1></div>' +
+    '<div class="s1-sub rv" style="--d:.3s"><b>do pedal à roda</b>uma única freada<br>do começo ao fim</div>' +
+    carSVG +
+    '<div class="s1-q rv" style="--d:1.9s"><p>Quando o motorista pisa no pedal, o que faz a roda desacelerar?</p></div>' +
+    '<div class="hud1 rv" style="--d:1.2s"><span>Velocidade</span><b><i id="kmh1">0</i> km/h</b><div class="pbar"><i id="pres1"></i></div><span>Pressão no freio</span></div>' +
+    '<div class="s1-team rv" style="--d:2.1s"><b>' + TEAM.join(' · ') + '</b></div></section>')
+
+  // 2 · pedal
+  S.push('<section class="slide dark" id="s2"><div class="grid"></div>' +
+    '<div class="txt"><div class="rv">' + kick(2, 'Pedal') + '</div><h2 class="h rv" style="--d:.08s">O pé inicia<br>a frenagem</h2>' +
+    '<p class="p rv" style="--d:.2s">Ao pisar, o pedal funciona como uma <b>alavanca</b>: gira e empurra a haste até o cilindro-mestre.</p></div>' +
+    '<svg class="full rv" style="--d:.25s" viewBox="0 0 1600 900">' +
+    '<path class="ln3" d="M1000 140V820"/>' + (function () { var h = ''; for (var y = 160; y < 820; y += 26) h += '<path class="ln3" d="M1000 ' + y + 'l14 -14"/>'; return h })() +
+    '<text class="mono" x="1012" y="132">PAREDE CORTA-FOGO</text>' +
+    '<path class="ln2" d="M640 800H1000M860 300L1000 250"/>' +
+    '<g class="pedal" id="pedal"><path class="ln" d="M860 300C850 420 820 560 795 690"/><rect class="ln fl" x="748" y="688" width="94" height="24" rx="6" transform="rotate(-12 795 700)"/>' +
+    '<circle class="ln fl" cx="860" cy="300" r="14"/><circle class="ln fl" cx="830" cy="470" r="9"/>' +
+    '<text class="lbl" x="728" y="772" text-anchor="end">Pedal</text></g>' +
+    '<g class="farrow"><path class="ln act" d="M610 712H722M700 696L724 712L700 728" style="stroke:var(--y)"/><text class="mono" x="610" y="690">FORÇA DO PÉ</text></g>' +
+    '<g class="rod" id="rod"><path class="ln" d="M830 470H1050" style="stroke-width:6"/><text class="lbl" x="900" y="450">Haste</text></g>' +
+    '<g id="boost"><rect class="ln fl" x="1030" y="350" width="175" height="240" rx="56"/><path class="ln2" d="M1048 470H1188"/><path class="ln2 diaph" d="M1118 362C1100 420 1100 520 1118 578"/>' +
+    '<text class="lbl" x="1030" y="640">Servofreio</text><text class="lbl2 boostcap" x="1030" y="672">Ajuda o motorista a aplicar força.</text></g>' +
+    '<g id="mc"><rect class="ln fl" x="1205" y="445" width="265" height="50" rx="6"/><rect class="ln fl" x="1200" y="428" width="14" height="84" rx="3"/>' +
+    '<rect class="ln2 mcpist" x="1228" y="453" width="40" height="34" rx="4"/>' +
+    '<rect class="ln fl" x="1262" y="372" width="160" height="58" rx="8"/><path class="ln" d="M1300 430V445M1385 430V445M1322 372V358H1362V372"/>' +
+    '<path class="ln2" d="M1450 445V404C1450 378 1466 366 1490 366H1560"/>' +
+    '<text class="lbl" x="1262" y="340">Cilindro-mestre</text></g>' +
+    '</svg>' + locator(1010, 420, 'Pedal') +
+    '<div class="hint" id="h2"><kbd>↓</kbd> segure para pisar no pedal</div></section>')
+
+  // 3 · cilindro-mestre em corte
+  S.push('<section class="slide dark" id="s3"><div class="grid"></div>' +
+    '<div class="txt"><div class="rv">' + kick(3, 'Cilindro-mestre') + '</div><h2 class="h rv" style="--d:.08s">A pressão<br>chega à roda</h2>' +
+    '<p class="p rv" style="--d:.2s;max-width:22em">O circuito já está cheio de fluido. Ao pisar no pedal, a <b>pressão aumenta</b> e é transmitida até a roda.</p></div>' +
+    '<svg class="full rv" style="--d:.25s" viewBox="0 0 1600 900"><defs><clipPath id="bore"><rect x="331" y="561" width="794" height="78"/></clipPath></defs>' +
+    // reservatório
+    '<rect class="ln fl" x="600" y="410" width="260" height="88" rx="10"/><rect id="res" x="603" y="452" width="254" height="44" fill="rgba(244,245,247,.10)"/><path class="ln" d="M700 410V396H760V410"/>' +
+    '<path class="ln2" d="M672 498V561M690 498V561M772 498V561M790 498V561"/>' +
+    '<text class="mono" x="600" y="386">RESERVATÓRIO</text>' +
+    // corpo
+    '<path class="ln" d="M330 535H1150V665H330M330 560H1125V640H330M1125 560V640"/>' +
+    '<g clip-path="url(#bore)"><rect id="fluid" x="550" y="561" width="575" height="78" fill="rgba(244,245,247,.10)"/>' +
+    '<path id="spring" class="ln2" d=""/>' +
+    '<g id="arrows" opacity="0">' + (function () { var h = ''; [760, 860, 960, 1060].forEach(function (x) { h += '<path class="ln act" style="stroke:var(--y)" d="M' + x + ' 590V570M' + (x - 7) + ' 577L' + x + ' 568L' + (x + 7) + ' 577M' + x + ' 610V630M' + (x - 7) + ' 623L' + x + ' 632L' + (x + 7) + ' 623"/>' }); return h })() + '</g></g>' +
+    '<g id="piston"><rect class="ln fl" x="440" y="562" width="110" height="76" rx="6"/><rect x="450" y="562" width="10" height="76" fill="var(--w3)"/><rect x="530" y="562" width="10" height="76" fill="var(--w3)"/>' +
+    '<path class="ln" d="M180 600H440" style="stroke-width:8"/></g>' +
+    '<text class="mono" x="330" y="700">CORTE DO CILINDRO-MESTRE</text>' +
+    '<text class="lbl" x="440" y="520" id="lPist">Pistão</text><text class="lbl" x="930" y="700" id="lFluid">Fluido de freio</text>' +
+    // tubulação até a pinça
+    '<path class="ln2" d="M1090 535V470C1090 410 1130 390 1190 390H1300C1360 390 1392 370 1404 330"/>' +
+    '<path id="lineY" d="M1090 535V470C1090 410 1130 390 1190 390H1300C1360 390 1392 370 1404 330" fill="none" stroke="var(--y)" stroke-width="5" stroke-linecap="round"/>' +
+    '<g id="cal3"><rect class="ln fl" x="1438" y="170" width="18" height="250" rx="4"/><path class="ln fl" d="M1404 240H1422V350H1404ZM1422 230H1490V360H1472"/><text class="lbl" x="1404" y="455">Pinça</text></g>' +
+    '<text class="mono" x="1150" y="372">TUBULAÇÃO</text>' +
+    '</svg>' + locator(1160, 320, 'Cilindro-mestre') +
+    '<div class="hint" id="h3"><kbd>↓</kbd> segure o freio e veja a pressão subir</div>' +
+    '<div class="gauge3"><span>Pressão no circuito</span><b><i id="bar3">0</i> bar</b></div></section>')
+
+  // 4 · roda
+  S.push('<section class="slide dark" id="s4"><div class="grid"></div>' +
+    '<div class="txt" style="width:36em"><div class="rv">' + kick(4, 'Roda') + '</div><h2 class="h rv" style="--d:.08s">As pastilhas<br>apertam o disco</h2>' +
+    '<p class="p rv" style="--d:.2s;font-size:1.35em;max-width:23em">O disco gira junto com a roda. O <b>atrito</b> com as pastilhas reduz a rotação e transforma parte da energia do movimento em <b>calor</b>.</p></div>' +
+    '<svg class="full rv" style="--d:.25s" viewBox="0 0 1600 900"><defs><radialGradient id="hot" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb23a" stop-opacity=".9"/><stop offset=".5" stop-color="#ff6a2a" stop-opacity=".35"/><stop offset="1" stop-color="#ff3b1f" stop-opacity="0"/></radialGradient>' +
+    '<clipPath id="dbar"><rect x="1356" y="290" width="28" height="470"/></clipPath></defs>' +
+    // pneu transparente
+    '<circle cx="840" cy="540" r="285" fill="none" stroke="var(--w3)" stroke-width="2" stroke-dasharray="3 9"/><circle class="ln3" cx="840" cy="540" r="245" stroke-dasharray="2 8"/>' +
+    '<text class="mono" x="560" y="250">PNEU (TRANSPARENTE)</text>' +
+    '<g id="disc4">' + (function () {
+      var h = '<circle class="ln fl" cx="840" cy="540" r="180"/><circle class="ln2" cx="840" cy="540" r="168"/><circle class="ln" cx="840" cy="540" r="86"/>'
+      for (var i = 0; i < 18; i++) {
+        var a = i / 18 * Math.PI * 2
+        h += '<circle class="ln2" cx="' + (840 + Math.cos(a) * 118).toFixed(1) + '" cy="' + (540 + Math.sin(a) * 118).toFixed(1) + '" r="6"/>'
+        h += '<circle class="ln2" cx="' + (840 + Math.cos(a + .17) * 146).toFixed(1) + '" cy="' + (540 + Math.sin(a + .17) * 146).toFixed(1) + '" r="6"/>'
+      }
+      for (var k = 0; k < 5; k++) { var b = k / 5 * Math.PI * 2; h += '<circle class="ln" cx="' + (840 + Math.cos(b) * 58).toFixed(1) + '" cy="' + (540 + Math.sin(b) * 58).toFixed(1) + '" r="9"/>' }
+      h += '<circle class="ln fl" cx="840" cy="540" r="28"/><path d="M840 400V372" stroke="var(--y)" stroke-width="5" stroke-linecap="round"/>'
+      return h
+    })() + '</g>' +
+    '<ellipse id="heat4" cx="963" cy="403" rx="95" ry="95" fill="url(#hot)" opacity="0"/>' +
+    (function () {
+      function P(r, a) { a = a * Math.PI / 180; return (840 + Math.cos(a) * r).toFixed(1) + ' ' + (540 + Math.sin(a) * r).toFixed(1) }
+      return '<g id="cal4"><path class="ln fl" d="M' + P(205, -72) + ' A205 205 0 0 1 ' + P(205, -24) + ' L' + P(140, -24) + ' A140 140 0 0 0 ' + P(140, -72) + 'Z"/><text class="lbl" x="1040" y="300">Pinça</text></g>'
+    })() +
+    // corte da pinça
+    '<rect x="1205" y="210" width="330" height="610" rx="16" fill="none" stroke="var(--w4)"/><text class="mono" x="1230" y="248">CORTE DA PINÇA</text>' +
+    '<rect class="ln fl" x="1356" y="290" width="28" height="470"/><g clip-path="url(#dbar)" id="hatch"></g>' +
+    '<rect id="heatS" x="1330" y="410" width="80" height="220" fill="url(#hot)" opacity="0"/>' +
+    '<path class="ln2" d="M1215 520H1254" id="inlet"/>' +
+    '<g id="body4"><path class="ln" d="M1300 400H1254V640H1300M1254 400V350H1478V640H1446M1478 400H1446"/>' +
+    '<g id="outPad"><rect class="ln fl" x="1404" y="420" width="27" height="200" rx="3"/><rect class="ln fl" x="1431" y="410" width="11" height="220" rx="2"/></g></g>' +
+    '<g id="inPad"><rect class="ln fl" x="1263" y="450" width="36" height="140" rx="4"/><rect class="ln fl" x="1299" y="410" width="11" height="220" rx="2"/><rect class="ln fl" x="1310" y="420" width="27" height="200" rx="3"/></g>' +
+    '<rect id="calFluid" x="1255" y="452" width="8" height="136" fill="var(--y)" opacity="0"/>' +
+    '<text class="mono" x="1236" y="680">PISTÃO</text><text class="mono" x="1336" y="790">DISCO</text><text class="mono" x="1400" y="680">PASTILHA</text>' +
+    '</svg>' +
+    '<div class="rpm"><span>Velocidade da roda</span><b><i id="rpmV">60</i> km/h</b><div class="bar"><i id="rpmB" style="width:75%"></i></div></div>' +
+    locator(1157, 392, 'Roda dianteira').replace('class="loc rv"', 'class="loc rv top"') + '</section>')
+
+
+  // 5 · desafio: pare na faixa
+  S.push('<section class="slide dark" id="sG"><div class="grid"></div>' +
+    '<div class="txt" style="width:44em"><div class="rv">' + kick(5, 'Desafio') + '</div><h2 class="h rv" style="--d:.08s">Pare na faixa</h2>' +
+    '<p class="p rv" style="--d:.2s;font-size:1.3em;max-width:26em">Acelere com <b>↑</b> e use o freio <b>↓</b> para parar o carro <b>dentro da faixa amarela</b>.</p></div>' +
+    '<svg class="full" viewBox="0 0 1600 900" id="gsvg"><defs><pattern id="hz" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="14" height="28" fill="rgba(242,212,58,.55)"/></pattern>' +
+    '<radialGradient id="bl2" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff2a2a" stop-opacity=".95"/><stop offset="1" stop-color="#ff2a2a" stop-opacity="0"/></radialGradient></defs>' +
+    '<rect x="0" y="600" width="1600" height="170" fill="#1b1d21"/><path class="ln2" d="M0 600H1600M0 770H1600"/>' +
+    '<g id="gWorld"></g>' +
+    '<g id="gSpeed"></g>' +
+    '<g transform="translate(294 470) scale(.42)"><ellipse cx="810" cy="532" rx="720" ry="26" fill="rgba(0,0,0,.5)"/>' +
+    '<g class="gcar">' + wheel(400, 440, false, 'gwr') + wheel(1190, 440, true, 'gwf') +
+    '<path d="' + CAR + '" fill="rgba(244,245,247,.06)" stroke="#f4f5f7" stroke-width="4"/>' +
+    '<path d="M566 288C628 236 700 210 784 205C862 202 922 214 962 240L988 278C900 282 700 288 566 288Z" fill="rgba(244,245,247,.05)" stroke="#f4f5f7" stroke-width="3"/>' +
+    '<ellipse id="gbl" cx="200" cy="344" rx="70" ry="34" fill="url(#bl2)" opacity="0"/></g></g>' +
+    '</svg>' +
+    '<div class="ghud"><div><span>Velocidade</span><b><i id="gV">0</i><small>km/h</small></b></div><div><span>Até a faixa</span><b><i id="gD">70</i><small>m</small></b></div><div><span>Melhor</span><b><i id="gBest">—</i></b></div></div>' +
+    '<div class="gsys"><span>Freio agora</span><div><i id="gs1">Pedal</i><i id="gs2">Cilindro</i><i id="gs3">Fluido</i><i id="gs4">Pastilhas</i></div></div>' +
+    '<div class="gmsg" id="gMsg"><b id="gMsgT">Acelere ↑</b><span id="gMsgS">e pare dentro da faixa amarela</span><button id="gAgain" data-noswipe>Jogar de novo · R</button></div>' +
+    '</section>')
+
+  // 6 · maquete
+  S.push('<section class="slide dark" id="s5"><div class="grid"></div>' +
+    '<div class="txt" style="width:70em"><div class="rv">' + kick(6, 'Comparação') + '</div><h2 class="h rv" style="--d:.08s">Do carro para<br>a nossa maquete</h2></div>' +
+    '<div class="map"><div class="draw rv" style="--d:.25s"><svg viewBox="0 0 800 470">' +
+    '<text class="mono" x="28" y="44">FREIO REAL</text>' +
+    '<g class="dim" id="p1"><path class="ln" d="M70 120L52 236"/><rect class="ln fl" x="34" y="232" width="40" height="12" rx="3"/><rect class="ln fl" x="110" y="130" width="190" height="42" rx="5"/><rect class="ln fl" x="150" y="92" width="110" height="38" rx="5"/><path class="ln" d="M64 152H110"/></g>' +
+    '<g class="dim" id="p2"><path class="ln" d="M300 151C420 151 430 330 520 330H560"/></g>' +
+    '<g class="dim" id="p3"><path class="ln fl" d="M560 300H606V276H730V384H606V360H560Z"/><rect class="ln fl" x="606" y="306" width="34" height="48" rx="3"/><path class="ln" d="M716 276V384"/></g>' +
+    '<g class="dim" id="p4"><rect class="ln fl" x="642" y="296" width="14" height="68" rx="2"/><rect class="ln fl" x="694" y="296" width="14" height="68" rx="2"/></g>' +
+    '<g class="dim" id="p5"><rect class="ln fl" x="664" y="180" width="24" height="290" rx="4"/></g>' +
+    '<g class="dim" id="p6"><path class="ln" d="M752 200C790 250 790 390 752 440M760 428L750 444L738 430"/></g>' +
+    [[205, 212], [440, 240], [582, 250], [622, 400], [676, 150], [786, 300]].map(function (p, i) { return '<g class="badge" id="b' + (i + 1) + '"><circle cx="' + p[0] + '" cy="' + p[1] + '" r="17"/><text x="' + p[0] + '" y="' + (p[1] + 7) + '" text-anchor="middle">' + (i + 1) + '</text></g>' }).join('') +
+    '</svg></div>' +
+    '<div class="draw rv" style="--d:.35s" data-drop="maquete">' + maqSVG('m5', '<text class="mono" x="24" y="40">NOSSA MAQUETE</text>' +
+      [[745, 330], [884, 250], [582, 72], [300, 330], [470, 175], [262, 192]].map(function (q, i) { return '<g class="badge" id="c' + (i + 1) + '"><circle cx="' + q[0] + '" cy="' + q[1] + '" r="17"/><text x="' + q[0] + '" y="' + (q[1] + 7) + '" text-anchor="middle">' + (i + 1) + '</text></g>' }).join('')) +
+      '<div class="photo ovl" data-key="maquete"></div>' + addBtn('maquete') + '</div>' +
+    '<div class="pairs">' + PAIRS.map(function (p, i) { return '<div class="pair rv" style="--d:' + (.45 + i * .06) + 's" id="pr' + (i + 1) + '"><div class="n">0' + (i + 1) + '</div><div class="a">' + p[0] + '</div><div class="eq">representa</div><div class="b">' + p[1] + '</div></div>' }).join('') + '</div>' +
+    '</div></section>')
+
+  // 6 · montagem
+  S.push('<section class="slide dark" id="s6"><div class="grid"></div>' +
+    '<div class="txt"><div class="rv">' + kick(7, 'Montagem') + '</div><h2 class="h rv" style="--d:.08s">Como montamos</h2></div>' +
+    '<div class="build"><div class="draw frames rv" style="--d:.2s" id="b6box" data-drop="montagem-1">' + maqSVG('b6', '<g class="ptag" id="padTag"><path class="lead2" d="M430 380V478H470"/><rect x="470" y="466" width="4" height="24" fill="var(--y)"/><text class="lbl" x="482" y="485" style="fill:var(--y)">Pastilha de freio</text></g>') +
+    BUILD.map(function (b, i) { return '<div class="photo ovl' + (i ? '' : ' cur') + '" data-key="' + b[0] + '"></div>' }).join('') + addBtn('montagem-1') + '</div>' +
+    '<div class="cap rv" style="--d:.3s"><div class="cnt">ETAPA <b id="bn">1</b> / 4</div><div class="ct">' + BUILD.map(function (b, i) { return '<p class="' + (i ? '' : 'cur') + '">' + b[1] + '</p>' }).join('') + '</div>' +
+    '<div class="thumbs">' + BUILD.map(function (b, i) { return '<i class="' + (i ? '' : 'cur') + '"></i>' }).join('') + '</div></div></div>' +
+    '<div class="final" id="final" data-drop="maquete"><div class="grid"></div><div class="fdraw">' + maqSVG('f6', '<g class="ptag" id="padTagF"><path class="lead2" d="M430 380V478H470"/><rect x="470" y="466" width="4" height="24" fill="var(--y)"/><text class="lbl" x="482" y="485" style="fill:var(--y)">Diferencial: a pastilha</text></g>') + '</div><div class="photo ovl" data-key="maquete"></div><div class="shade"></div>' + addBtn('maquete') + '<div class="live"><div class="kick"><span class="dotlive"></span>Agora na frente de vocês</div><h2>Demonstração<br>ao vivo</h2></div></div></section>')
+
+  /* ═════════ MONTAGEM DO PALCO ═════════ */
+  $('app').innerHTML = '<div id="stage">' + S.join('') +
+    '<div class="prog" id="prog"></div>' +
+    '<div class="pedals" id="pedals" data-noswipe><button class="pdl gas" id="pGas" aria-label="Acelerar"><span class="pd"></span><b>Acelerar</b><small>↑ · W</small></button>' +
+    '<button class="pdl brk" id="pBrk" aria-label="Frear"><span class="pd"></span><b>Frear</b><small>↓ · S · B</small></button></div>' +
+    '<div class="ui" id="ui" data-noswipe><button class="cb" id="bMenu" aria-label="Menu">' + IC.grid + '</button>' +
+    '<button class="cb" id="bPrev" aria-label="Voltar">' + IC.l + '</button>' +
+    '<div class="cnt2"><div class="num" id="num">01 <span>/ 06</span></div><div class="dots" id="dots"></div></div>' +
+    '<button class="cb pri" id="bNext" aria-label="Avançar">' + IC.r + '</button>' +
+    '<button class="cb" id="bSnd" aria-label="Som">' + IC.snd + '</button>' +
+    '<button class="cb" id="bFs" aria-label="Tela cheia">' + IC.fs + '</button></div>' +
+    '<div class="menu" id="menu" data-noswipe><div class="kick"><b>MENU</b><i></i>Ir para</div><h3>Freio hidráulico</h3><button class="cb x" id="bX">' + IC.x + '</button><div class="mg">' +
+    TITLES.map(function (t, i) { return '<button data-go="' + i + '"><span>0' + (i + 1) + '</span><b>' + t + '</b></button>' }).join('') +
+    '</div><p class="tip">← → trocar de tela · ↑ acelerar · ↓ frear · R recomeçar o desafio · F tela cheia · M menu</p></div></div><div class="rotate">Gire o celular para ver melhor</div>'
+
+  var stage = $('stage'), slides = [].slice.call(stage.querySelectorAll('.slide')), total = slides.length
+
+  function layout() {
+    var vw = window.innerWidth, vh = window.innerHeight, w = vw, h = vw * 9 / 16
+    if (h > vh) { h = vh; w = vh * 16 / 9 }
+    stage.style.width = w + 'px'; stage.style.height = h + 'px'; stage.style.fontSize = (w / 100) + 'px'
+    $('ui').style.fontSize = Math.max(12, Math.min(17, w / 95)) + 'px'
+  }
+  layout(); window.addEventListener('resize', layout)
+
+  /* ═════════ FOTOS (compartilhadas por chave) ═════════ */
+  var photoSrc = {}
+  var picker = document.createElement('input'); picker.type = 'file'; picker.accept = 'image/*'; picker.style.display = 'none'; document.body.appendChild(picker)
+  var pickKey = null
+  picker.onchange = function () { var f = picker.files && picker.files[0]; if (f && pickKey) setPhoto(pickKey, URL.createObjectURL(f)); picker.value = '' }
+  function renderSlot(el) {
+    var k = el.getAttribute('data-key'), src = photoSrc[k]
+    if (el.classList.contains('ovl')) { el.innerHTML = src ? '<img alt="" src="' + src + '">' : ''; el.classList.toggle('has', !!src); return }
+    if (src) { el.innerHTML = '<img alt="" src="' + src + '">'; return }
+    el.innerHTML = '<div class="ph">' + IC.img + '<b>Toque para adicionar a foto</b><code>media/' + k + '.jpg</code></div>'
+  }
+  function setPhoto(k, src) { photoSrc[k] = src; [].forEach.call(stage.querySelectorAll('.photo[data-key="' + k + '"]'), renderSlot) }
+  ;[].forEach.call(stage.querySelectorAll('[data-add]'), function (b) {
+    b.addEventListener('click', function (e) { e.stopPropagation(); pickKey = b.getAttribute('data-add'); picker.click() })
+  })
+  ;[].forEach.call(stage.querySelectorAll('[data-drop]'), function (el) {
+    el.addEventListener('dragover', function (e) { e.preventDefault(); el.classList.add('drag') })
+    el.addEventListener('dragleave', function () { el.classList.remove('drag') })
+    el.addEventListener('drop', function (e) { e.preventDefault(); el.classList.remove('drag'); var f = e.dataTransfer && e.dataTransfer.files[0]; if (f) setPhoto(el.getAttribute('data-drop'), URL.createObjectURL(f)) })
+  })
+  ;[].forEach.call(stage.querySelectorAll('.photo:not(.ovl)'), function (el) {
+    var k = el.getAttribute('data-key')
+    renderSlot(el)
+    el.addEventListener('click', function () { if (!photoSrc[k]) { pickKey = k; picker.click() } })
+    el.addEventListener('dragover', function (e) { e.preventDefault(); el.classList.add('drag') })
+    el.addEventListener('dragleave', function () { el.classList.remove('drag') })
+    el.addEventListener('drop', function (e) { e.preventDefault(); el.classList.remove('drag'); var f = e.dataTransfer && e.dataTransfer.files[0]; if (f) setPhoto(k, URL.createObjectURL(f)) })
+  })
+  ;[].forEach.call(stage.querySelectorAll('.photo.ovl'), renderSlot)
+  ;['maquete', 'montagem-1', 'montagem-2', 'montagem-3', 'montagem-4'].forEach(function (k) {
+    var im = new Image(); im.onload = function () { if (!photoSrc[k]) setPhoto(k, im.src) }; im.src = 'media/' + k + '.jpg'
+  })
+
+  /* ═════════ ANIMAÇÕES POR SLIDE ═════════ */
+  function tween(from, to, dur, fn, done) {
+    var t0 = performance.now(), id = { stop: false }
+    function f(now) {
+      if (id.stop) return
+      var t = Math.min(1, (now - t0) / dur), e = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+      fn(from + (to - from) * e)
+      if (t < 1) requestAnimationFrame(f); else if (done) done()
+    }
+    requestAnimationFrame(f); return id
+  }
+  function act(id, on) { var el = $(id); if (el) el.classList.toggle('act', !!on) }
+
+  // slide 3: cilindro-mestre
+  var lineY = $('lineY'), lineLen = lineY.getTotalLength ? lineY.getTotalLength() : 700
+  lineY.style.strokeDasharray = lineLen; lineY.style.strokeDashoffset = lineLen
+  function spring(x0) {
+    var x1 = 1125, n = 9, d = 'M' + x0 + ' 600', w = (x1 - x0) / n
+    for (var i = 0; i < n; i++) d += 'L' + (x0 + w * (i + .25)).toFixed(1) + ' 572L' + (x0 + w * (i + .75)).toFixed(1) + ' 628'
+    return d + 'L' + x1 + ' 600'
+  }
+  var s3p = 0, s3tw = null
+  function draw3(p) {
+    s3p = p
+    var dx = 170 * p
+    $('piston').setAttribute('transform', 'translate(' + dx + ' 0)')
+    $('fluid').setAttribute('x', 550 + dx); $('fluid').setAttribute('width', 575 - dx)
+    $('fluid').setAttribute('fill', 'rgba(242,212,58,' + (.1 + .32 * p).toFixed(3) + ')')
+    $('spring').setAttribute('d', spring(550 + dx))
+    $('arrows').setAttribute('opacity', Math.max(0, (p - .35) / .65).toFixed(2))
+    var q = Math.max(0, Math.min(1, (p - .3) / .7))
+    lineY.style.strokeDashoffset = (lineLen * (1 - q)).toFixed(1)
+    act('piston', p > .02); act('cal3', p > .97)
+    $('lFluid').style.fill = p > .3 ? 'var(--y)' : ''
+  }
+  draw3(0)
+
+  function maqState(p, show, cur, opts) {
+    ;['base', 'motor', 'cal', 'cd', 'pad', 'sb', 'sa', 'sin', 'hose'].forEach(function (g) {
+      var el = $(p + g); if (!el) return
+      el.classList.toggle('hid', show.indexOf(g) < 0)
+      var on = cur.indexOf(g) >= 0
+      el.classList.toggle('act', on); [].forEach.call(el.querySelectorAll('.ln,.ln2'), function (e) { e.classList.toggle('act', on) })
+    })
+    var svg = $(p + 'base').ownerSVGElement
+    svg.classList.toggle('wet', !!(opts && opts.wet)); svg.classList.toggle('spinning', !!(opts && opts.spin))
+  }
+  var ALL = ['base', 'motor', 'cal', 'cd', 'pad', 'sb', 'sa', 'sin', 'hose']
+  maqState('f6', ALL, [], { wet: true, spin: true })
+  // slide 5
+  function draw5(st) {
+    var map5 = [[], ['sin'], ['hose'], ['cal', 'sb', 'sa'], ['pad'], ['cd'], ['motor']]
+    maqState('m5', ALL, map5[st] || [], { wet: st === 2, spin: st === 6 })
+    for (var j = 1; j <= 6; j++) $('c' + j).classList.toggle('show', j <= st)
+    for (var i = 1; i <= 6; i++) {
+      $('p' + i).classList.toggle('act', i === st)
+      $('p' + i).querySelectorAll('.ln').forEach ? [].forEach.call($('p' + i).querySelectorAll('.ln'), function (e) { e.classList.toggle('act', i === st) }) : 0
+      $('b' + i).classList.toggle('show', i <= st)
+      $('pr' + i).classList.toggle('cur', i === st)
+      $('pr' + i).classList.toggle('seen', i < st)
+    }
+  }
+  // slide 6
+  function draw6(st) {
+    var steps6 = [['motor'], ['motor', 'cd'], ['motor', 'cd', 'base', 'cal', 'pad'], ALL]
+    var cur6 = [['motor'], ['cd'], ['base', 'cal', 'pad'], ['sin', 'hose', 'sb', 'sa']]
+    $('padTag').classList.toggle('show', Math.min(3, st) === 2)
+    var kk = Math.min(3, st)
+    maqState('b6', steps6[kk], cur6[kk], { wet: kk === 3, spin: kk === 0 || kk === 3 })
+    $('b6box').setAttribute('data-drop', BUILD[kk][0]); $('b6box').querySelector('[data-add]').setAttribute('data-add', BUILD[kk][0])
+    var fr = $('s6').querySelectorAll('.frames .photo'), cp = $('s6').querySelectorAll('.ct p'), th = $('s6').querySelectorAll('.thumbs i')
+    var k = Math.min(3, st)
+    for (var i = 0; i < 4; i++) {
+      fr[i].classList.toggle('cur', i === k); cp[i].classList.toggle('cur', i === k)
+      th[i].className = i === k ? 'cur' : (i < k ? 'done' : '')
+    }
+    $('bn').textContent = k + 1
+    $('final').classList.toggle('show', st === 4)
+  }
+
+  var SL = [
+    { steps: 0, apply: function () {}, cruise: true, pedals: 'both' },
+    { steps: 0, apply: function () { act('pedal', true) }, pedals: 'brake' },
+    { steps: 0, apply: function () {}, pedals: 'brake' },
+    { steps: 0, apply: function () {}, cruise: true, pedals: 'both' },
+    { steps: 0, apply: function () { game.reset() }, pedals: 'both' },
+    { steps: 6, apply: function (st) { draw5(st) }, cruise: true, pedals: 'both' },
+    { steps: 4, apply: function (st) { draw6(st) } }
+  ]
+
+  /* ═════════ CONTROLE TIPO JOGO: acelerador + freio ═════════ */
+  var VMAX = 22.2, CRUISE = 16.7
+  var ctl = { gas: false, brk: false, t: 0, b: 0, v: CRUISE, dist: 0, ang: 0 }
+  function bindPedal(btn, key) {
+    btn.addEventListener('pointerdown', function (e) { e.preventDefault(); try { btn.setPointerCapture(e.pointerId) } catch (x) {} ctl[key] = true; audio.init() })
+    ;['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (ev) { btn.addEventListener(ev, function () { ctl[key] = false }) })
+    btn.addEventListener('contextmenu', function (e) { e.preventDefault() })
+  }
+  bindPedal($('pGas'), 'gas'); bindPedal($('pBrk'), 'brk')
+  function keyCtl(e, down) {
+    var k = e.key
+    if (k === 'ArrowUp' || k === 'w' || k === 'W') { ctl.gas = down; e.preventDefault() }
+    else if (k === 'ArrowDown' || k === 's' || k === 'S' || k === 'b' || k === 'B') { ctl.brk = down; e.preventDefault() }
+  }
+  window.addEventListener('keydown', function (e) { audio.init(); if (!e.repeat) keyCtl(e, true); else if (/Arrow(Up|Down)/.test(e.key)) e.preventDefault() })
+  window.addEventListener('keyup', function (e) { keyCtl(e, false) })
+  window.addEventListener('blur', function () { ctl.gas = ctl.brk = false })
+
+  /* som do motor e chiado do freio (sintetizados, sem arquivos) */
+  var audio = (function () {
+    var AC = null, eg, eo, eo2, lp, sg, muted = false
+    function init() {
+      try {
+        if (AC) { if (AC.state === 'suspended') AC.resume(); return }
+        var C = window.AudioContext || window.webkitAudioContext; if (!C) return
+        AC = new C()
+        eo = AC.createOscillator(); eo.type = 'sawtooth'; eo.frequency.value = 60
+        eo2 = AC.createOscillator(); eo2.type = 'square'; eo2.frequency.value = 30
+        lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500
+        eg = AC.createGain(); eg.gain.value = 0
+        var mix = AC.createGain(); mix.gain.value = .5
+        eo.connect(lp); eo2.connect(mix); mix.connect(lp); lp.connect(eg); eg.connect(AC.destination)
+        eo.start(); eo2.start()
+        var buf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate), d = buf.getChannelData(0)
+        for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1
+        var ns = AC.createBufferSource(); ns.buffer = buf; ns.loop = true
+        var bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2600; bp.Q.value = 9
+        sg = AC.createGain(); sg.gain.value = 0
+        ns.connect(bp); bp.connect(sg); sg.connect(AC.destination); ns.start()
+      } catch (x) { AC = null }
+    }
+    function update(active) {
+      if (!AC || !eg) return
+      var now = AC.currentTime, on = active && !muted, vr = ctl.v / VMAX, f = 45 + vr * 150 + ctl.t * 25
+      eg.gain.setTargetAtTime(on ? .035 + .05 * vr + .03 * ctl.t : 0, now, .08)
+      eo.frequency.setTargetAtTime(f, now, .1); eo2.frequency.setTargetAtTime(f / 2, now, .1)
+      lp.frequency.setTargetAtTime(380 + vr * 900 + ctl.t * 500, now, .1)
+      sg.gain.setTargetAtTime(on && ctl.b > .5 && ctl.v > 2.5 ? .018 * (ctl.b - .5) / .5 : 0, now, .05)
+    }
+    return { init: init, update: update, toggle: function () { muted = !muted; return muted } }
+  })()
+  $('bSnd').onclick = function () { audio.init(); var m = audio.toggle(); $('bSnd').innerHTML = m ? IC.mute : IC.snd }
+
+  /* capa: estrada e rastros */
+  var road1 = $('road1'), rd = ''
+  for (var r = 0; r < 16; r++) rd += '<rect x="0" y="556" width="70" height="5" rx="2" fill="rgba(22,23,26,.35)"/>'
+  road1.innerHTML = '<path d="M0 548H1600" stroke="rgba(22,23,26,.35)" stroke-width="2"/>' + rd
+  var dashes1 = [].slice.call(road1.querySelectorAll('rect'))
+  var sp1 = '', spG = ''
+  for (var q = 0; q < 10; q++) sp1 += '<rect x="0" y="' + (230 + q * 26) + '" width="' + (90 + (q * 53) % 140) + '" height="2" fill="rgba(22,23,26,.22)"/>'
+  $('speed1').innerHTML = sp1
+  for (var q2 = 0; q2 < 12; q2++) spG += '<rect x="0" y="' + (380 + q2 * 18) + '" width="' + (60 + (q2 * 71) % 160) + '" height="2" fill="rgba(244,245,247,.16)"/>'
+  $('gSpeed').innerHTML = spG
+  var speeds1 = [].slice.call($('speed1').children), speedsG = [].slice.call($('gSpeed').children)
+
+  function rotWheels(ids, ang) {
+    ids.forEach(function (id) { var g = $(id); if (g) g.setAttribute('transform', 'rotate(' + ang.toFixed(1) + ' ' + g.getAttribute('data-cx') + ' ' + g.getAttribute('data-cy') + ')') })
+  }
+  function streaks(list, dist, v) {
+    list.forEach(function (el, i) {
+      var w = +el.getAttribute('width'), x = 1700 - ((dist * 60 + i * 397) % (1900 + w))
+      el.setAttribute('x', x.toFixed(1)); el.setAttribute('opacity', Math.min(1, v / CRUISE).toFixed(2))
+    })
+  }
+
+  /* slide 4: hachura do disco no corte */
+  var hatch = $('hatch'), hl = ''
+  for (var hi = 0; hi < 16; hi++) hl += '<path class="ln2" d="M1362 0h16"/>'
+  hatch.innerHTML = hl
+  var hs = [].slice.call(hatch.children)
+
+  var cdOff = 0
+
+  /* ═════════ DESAFIO: PARE NA FAIXA ═════════ */
+  var game = (function () {
+    var ZONE = 70, ZLEN = 6, PX = 14, NOSE = 900, state = 'ready', best = null
+    var world = $('gWorld'), h = ''
+    for (var i = 0; i < 24; i++) h += '<rect class="gd" y="682" width="42" height="6" rx="2" fill="rgba(244,245,247,.45)"/>'
+    for (var m2 = 0; m2 <= 150; m2 += 10) h += '<g class="gk" data-m="' + m2 + '"><path d="M0 770V792" stroke="rgba(244,245,247,.35)" stroke-width="2"/><text y="818" text-anchor="middle" class="mono">' + m2 + ' m</text></g>'
+    h += '<g class="gk" data-m="' + ZONE + '"><rect x="0" y="602" width="' + (ZLEN * PX) + '" height="166" fill="url(#hz)"/><rect x="0" y="602" width="' + (ZLEN * PX) + '" height="166" fill="none" stroke="#f2d43a" stroke-width="3"/>' +
+      '<text x="' + (ZLEN * PX / 2) + '" y="585" text-anchor="middle" class="lbl" style="fill:#f2d43a">Pare aqui</text></g>'
+    h += '<g class="gk" data-m="0"><rect x="-3" y="602" width="6" height="166" fill="rgba(244,245,247,.5)"/></g>'
+    world.innerHTML = h
+    var marks = [].slice.call(world.querySelectorAll('.gk')), dashes = [].slice.call(world.querySelectorAll('.gd'))
+    function msg(t, sub, again, good) {
+      $('gMsgT').textContent = t; $('gMsgS').textContent = sub
+      $('gMsg').classList.toggle('again', !!again); $('gMsg').classList.toggle('good', !!good)
+    }
+    function reset() { ctl.v = 0; ctl.dist = 0; state = 'ready'; msg('Acelere ↑', 'e pare dentro da faixa amarela') }
+    $('gAgain').onclick = function () { reset() }
+    function fmt(n) { return n.toFixed(1).replace('.', ',') }
+    function render() {
+      marks.forEach(function (el) { var X = NOSE + (+el.getAttribute('data-m') - ctl.dist) * PX; el.setAttribute('transform', 'translate(' + X.toFixed(1) + ' 0)') })
+      var off = (ctl.dist * PX) % 84
+      dashes.forEach(function (el, i) { el.setAttribute('x', (i * 84 - off - 60).toFixed(1)) })
+      streaks(speedsG, ctl.dist, ctl.v)
+      rotWheels(['gwr', 'gwf'], ctl.ang)
+      $('gbl').setAttribute('opacity', (ctl.b * .95).toFixed(2))
+      $('gwfcal').setAttribute('fill', ctl.b > .5 ? '#f2d43a' : '#6b7078')
+      $('gV').textContent = Math.round(ctl.v * 3.6)
+      var left = ZONE - ctl.dist
+      $('gD').textContent = left > 0 ? Math.ceil(left) : 0
+      ;[.05, .2, .35, .5].forEach(function (th, i) { $('gs' + (i + 1)).classList.toggle('on', ctl.b > th) })
+      if (state === 'ready' && ctl.v > .5) { state = 'run'; msg('Valendo!', 'freie com ↓ para parar na faixa') }
+      if (state === 'run' && ctl.v < .03 && !ctl.gas) {
+        state = 'done'
+        var err = ctl.dist < ZONE ? ctl.dist - ZONE : (ctl.dist > ZONE + ZLEN ? ctl.dist - ZONE - ZLEN : 0)
+        if (err === 0) msg('Na medida! 🎯', 'o carro parou dentro da faixa', true, true)
+        else if (err < 0) msg('Parou ' + fmt(-err) + ' m antes', 'faltou um pouco · solte o freio mais cedo', true)
+        else msg('Passou ' + fmt(err) + ' m', 'comece a frear antes · tente de novo', true)
+        var score = Math.abs(err)
+        if (best === null || score < best) { best = score; $('gBest').textContent = score === 0 ? 'na faixa' : fmt(score) + ' m' }
+      }
+    }
+    return { reset: reset, render: render, locked: function () { return state === 'done' } }
+  })()
+
+  /* ═════════ LAÇO PRINCIPAL ═════════ */
+  var lastT = performance.now()
+  function loop(now) {
+    var dt = Math.min(.05, (now - lastT) / 1000); lastT = now
+    var cfg = SL[idx] || {}
+    var gasOn = ctl.gas && !(idx === 4 && game.locked())
+    ctl.t += ((gasOn ? 1 : 0) - ctl.t) * Math.min(1, dt * 6)
+    ctl.b += ((ctl.brk ? 1 : 0) - ctl.b) * Math.min(1, dt * (ctl.brk ? 3.2 : 6))
+    if (ctl.b < .002) ctl.b = 0
+    if (cfg.pedals) {
+      var acc = ctl.t * 4.2 - ctl.b * 9.5 - (ctl.v > 0 ? .25 : 0)
+      if (cfg.cruise && !ctl.gas && !ctl.brk && ctl.v < CRUISE) acc += 3
+      ctl.v = Math.max(0, Math.min(VMAX, ctl.v + acc * dt))
+      if (cfg.cruise && !ctl.gas && ctl.v > CRUISE) ctl.v = Math.max(CRUISE, ctl.v - 2 * dt)
+      ctl.dist += ctl.v * dt
+      ctl.ang = (ctl.ang + ctl.v * dt * 42) % 360
+    }
+    $('pGas').classList.toggle('on', ctl.gas); $('pBrk').classList.toggle('on', ctl.brk)
+    var b = ctl.b, v = ctl.v
+    if (idx === 0) {
+      rotWheels(['w1r', 'w1f'], ctl.ang)
+      var off = (ctl.dist * 1600 / 30) % 110
+      dashes1.forEach(function (el, i) { el.setAttribute('x', (i * 110 - off).toFixed(1)) })
+      streaks(speeds1, ctl.dist, v)
+      $('blight').setAttribute('opacity', (b * .95).toFixed(2))
+      ;[.05, .2, .35].forEach(function (th, i) { $('sys' + (i + 1)).classList.toggle('hot', b > th) })
+      $('w1fcal').setAttribute('fill', b > .5 ? '#f2d43a' : '#6b7078')
+      ;[].forEach.call(document.querySelectorAll('.s1 .mkg'), function (g, i) { g.classList.toggle('hot', b > [.05, .2, .35, .5][i]) })
+      $('kmh1').textContent = Math.round(v * 3.6); $('pres1').style.width = (b * 100).toFixed(0) + '%'
+    } else if (idx === 1) {
+      $('pedal').setAttribute('transform', 'rotate(' + (-13 * b).toFixed(2) + ' 760 330)')
+      $('rod').setAttribute('transform', 'translate(' + (27 * b).toFixed(1) + ' 0)')
+      var on2 = b > .05
+      act('rod', on2); act('boost', on2); act('mc', on2); $('s2').classList.toggle('on', on2)
+      $('h2').classList.toggle('off', on2)
+    } else if (idx === 2) {
+      draw3(b); $('bar3').textContent = Math.round(b * 80); $('h3').classList.toggle('off', b > .05)
+    } else if (idx === 3) {
+      var move = Math.min(1, b * 3), contact = Math.max(0, (b - .3) / .7), vr = v / VMAX
+      $('disc4').setAttribute('transform', 'rotate(' + (ctl.ang * 1.6 % 360).toFixed(2) + ' 840 540)')
+      var sc = (ctl.dist * 40) % 30
+      hs.forEach(function (hh, i) { hh.setAttribute('transform', 'translate(0 ' + (290 + i * 30 + sc).toFixed(1) + ')') })
+      $('inPad').setAttribute('transform', 'translate(' + (19 * move).toFixed(2) + ' 0)')
+      $('body4').setAttribute('transform', 'translate(' + (-20 * move).toFixed(2) + ' 0)')
+      $('calFluid').setAttribute('opacity', move.toFixed(2)); $('calFluid').setAttribute('width', (8 + 19 * move).toFixed(1))
+      var hot = contact * Math.min(1, vr * 3)
+      $('heat4').setAttribute('opacity', (hot * .85).toFixed(2)); $('heatS').setAttribute('opacity', (hot * .8).toFixed(2))
+      act('cal4', b > .05); act('inPad', b > .05); act('body4', b > .05)
+      $('inlet').style.stroke = b > .05 ? 'var(--y)' : ''
+      $('rpmV').textContent = Math.round(v * 3.6); $('rpmB').style.width = (vr * 100).toFixed(0) + '%'; $('rpmB').style.background = b > .3 ? 'var(--y)' : ''
+    } else if (idx === 4) {
+      game.render()
+    } else if (idx === 5) {
+      $('m5base').ownerSVGElement.classList.toggle('wet', b > .05 || step === 2)
+      var ip = $('m5sin').querySelector('.inp'); if (ip) ip.setAttribute('transform', 'translate(' + (24 * b).toFixed(1) + ' 0)')
+      var pu = $('m5sb').querySelector('.push'); if (pu) pu.style.transform = 'translateX(' + (-5 * Math.min(1, b * 2)).toFixed(2) + 'px)'
+      cdOff -= v * dt * 30
+      var spn = $('m5cd').querySelector('.spin'); if (spn) { spn.style.animation = 'none'; spn.style.opacity = 1; spn.style.strokeDashoffset = cdOff.toFixed(1) }
+    }
+    audio.update(idx === 0 || idx === 3 || idx === 4)
+    requestAnimationFrame(loop)
+  }
+
+  /* ═════════ NAVEGAÇÃO ═════════ */
+  var idx = -1, step = 0
+  function updateUI() {
+    $('num').innerHTML = '0' + (idx + 1) + ' <span>/ 0' + total + '</span>'
+    var n = SL[idx].steps, d = ''
+    for (var i = 0; i <= n && n > 0; i++) d += '<i class="' + (i <= step ? 'on' : '') + '"></i>'
+    $('dots').innerHTML = d; $('dots').style.display = n ? 'flex' : 'none'
+    $('bPrev').disabled = idx === 0 && step === 0
+    $('bNext').disabled = idx === total - 1 && step === SL[idx].steps
+    var frac = (idx + (SL[idx].steps ? step / (SL[idx].steps + 1) : 0) + 1) / total
+    $('prog').style.width = (frac * 100) + '%'
+    stage.classList.toggle('light', idx === 0)
+    ;[].forEach.call(document.querySelectorAll('.menu [data-go]'), function (b, i) { b.classList.toggle('cur', i === idx) })
+    try { history.replaceState(null, '', '#' + (idx + 1)) } catch (e) {}
+  }
+  function go(to, st, instant) {
+    to = Math.max(0, Math.min(total - 1, to))
+    var back = to < idx, prev = slides[idx], next = slides[to]
+    if (prev && prev !== next) {
+      prev.classList.remove('active', 'back'); prev.classList.add('leaving'); prev.classList.toggle('back', back)
+      ;(function (p) { setTimeout(function () { if (!p.classList.contains('active')) p.classList.remove('leaving', 'back') }, 800) })(prev)
+    }
+    next.classList.remove('leaving', 'back', 'active'); next.classList.toggle('instant', !!instant)
+    if (back) next.classList.add('back')
+    void next.offsetWidth; next.classList.add('active')
+    idx = to; step = st || 0
+    SL[idx].apply(step, false)
+    stage.setAttribute('data-s', idx)
+    var pm = SL[idx].pedals
+    $('pedals').className = 'pedals' + (pm ? ' show' : '') + (pm === 'brake' ? ' brake-only' : '')
+    if (idx === 0 || idx === 3 || idx === 5) { if (ctl.v < 1) ctl.v = CRUISE }
+    updateUI()
+  }
+  function next() {
+    if (step < SL[idx].steps) { step++; SL[idx].apply(step, true); updateUI() }
+    else if (idx < total - 1) go(idx + 1, 0)
+  }
+  function prev() {
+    if (step > 0) { step--; SL[idx].apply(step, true); updateUI() }
+    else if (idx > 0) go(idx - 1, SL[idx - 1].steps)
+  }
+  $('bNext').onclick = next; $('bPrev').onclick = prev
+
+  var menu = $('menu')
+  function setMenu(v) { menu.classList.toggle('open', v) }
+  $('bMenu').onclick = function () { setMenu(true) }
+  $('bX').onclick = function (e) { e.stopPropagation(); setMenu(false) }
+  menu.onclick = function (e) { var b = e.target.closest('[data-go]'); if (b) { go(+b.getAttribute('data-go'), 0); setMenu(false) } }
+
+  var de = document.documentElement, fsOk = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled)
+  if (!fsOk) $('bFs').style.display = 'none'
+  function isFs() { return !!(document.fullscreenElement || document.webkitFullscreenElement) }
+  function toggleFs() {
+    if (!fsOk) return
+    if (isFs()) (document.exitFullscreen || document.webkitExitFullscreen).call(document)
+    else { var r = (de.requestFullscreen || de.webkitRequestFullscreen).call(de); if (r && r.catch) r.catch(function () {}) }
+  }
+  $('bFs').onclick = toggleFs
+  function onFs() { $('bFs').innerHTML = isFs() ? IC.fs2 : IC.fs }
+  document.addEventListener('fullscreenchange', onFs); document.addEventListener('webkitfullscreenchange', onFs)
+
+  window.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return
+    var k = e.key
+    if (k === 'ArrowRight' || k === 'PageDown' || k === ' ' || k === 'Enter') { e.preventDefault(); next() }
+    else if (k === 'ArrowLeft' || k === 'PageUp' || k === 'Backspace') { e.preventDefault(); prev() }
+    else if (k === 'r' || k === 'R') { if (idx === 4) game.reset() }
+    else if (k === 'Home') go(0, 0)
+    else if (k === 'End') go(total - 1, SL[total - 1].steps)
+    else if (k === 'f' || k === 'F') toggleFs()
+    else if (k === 'm' || k === 'M') setMenu(!menu.classList.contains('open'))
+    else if (k === 'Escape') setMenu(false)
+    else if (/^[1-7]$/.test(k)) go(+k - 1, 0)
+  })
+
+  var t0 = null
+  stage.addEventListener('touchstart', function (e) {
+    if (e.target.closest('[data-noswipe]') || menu.classList.contains('open')) { t0 = null; return }
+    var t = e.touches[0]; t0 = { x: t.clientX, y: t.clientY, t: Date.now() }
+  }, { passive: true })
+  stage.addEventListener('touchend', function (e) {
+    if (!t0) return
+    var t = e.changedTouches[0], dx = t.clientX - t0.x, dy = t.clientY - t0.y
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3 && Date.now() - t0.t < 900) { dx < 0 ? next() : prev() }
+    t0 = null
+  }, { passive: true })
+
+  var hover = window.matchMedia && window.matchMedia('(hover: hover)').matches, idleT
+  function wake() {
+    $('ui').classList.remove('idle'); stage.style.cursor = ''
+    clearTimeout(idleT)
+    if (hover) idleT = setTimeout(function () { if (!menu.classList.contains('open')) { $('ui').classList.add('idle'); stage.style.cursor = 'none' } }, 2600)
+  }
+  window.addEventListener('mousemove', wake); wake()
+
+  var h0 = parseInt((location.hash || '').slice(1), 10)
+  go(isFinite(h0) ? h0 - 1 : 0, 0, true)
+  requestAnimationFrame(loop)
+})()
+
+</script>
+</body>
+</html>
